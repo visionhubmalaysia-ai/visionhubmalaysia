@@ -114,8 +114,45 @@ export const appointments = visionhubSchema.table(
   }),
 );
 
+export const trainingOptions = visionhubSchema.table("training_options", {
+  key: text("key").primaryKey(),
+  labelEn: text("label_en").notNull(),
+  labelMs: text("label_ms").notNull(),
+  active: boolean("active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const publicHolidays = visionhubSchema.table("public_holidays", {
+  date: date("date").primaryKey(),
+  nameEn: text("name_en").notNull(),
+  nameMs: text("name_ms"),
+  active: boolean("active").notNull().default(true),
+});
+
+export const appointmentEvents = visionhubSchema.table(
+  "appointment_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appointmentId: uuid("appointment_id")
+      .notNull()
+      .references(() => appointments.id, { onDelete: "cascade" }),
+    actor: text("actor"),
+    event: text("event").notNull(),
+    fromValue: jsonb("from_value"),
+    toValue: jsonb("to_value"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byAppointment: index("appointment_events_appointment_idx").on(t.appointmentId),
+  }),
+);
+
 export type Appointment = typeof appointments.$inferSelect;
 export type NewAppointment = typeof appointments.$inferInsert;
 export type Optometrist = typeof optometrists.$inferSelect;
 export type BlockedDate = typeof blockedDates.$inferSelect;
 export type Service = typeof services.$inferSelect;
+export type TrainingOption = typeof trainingOptions.$inferSelect;
+export type PublicHoliday = typeof publicHolidays.$inferSelect;
+export type AppointmentEvent = typeof appointmentEvents.$inferSelect;

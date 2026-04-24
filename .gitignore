@@ -8,3 +8,5 @@ node_modules/
 _source/
 db/migrations/meta/
 *.tsbuildinfo
+_migrate.mjs
+_bootstrap.sql
