@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import createIntlMiddleware from "next-intl/middleware";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { routing } from "@/lib/i18n/routing";
 
 const intl = createIntlMiddleware(routing);
@@ -34,12 +34,12 @@ const withClerk = clerkMiddleware(async (auth, req) => {
   return intl(req);
 });
 
-export default function middleware(req: NextRequest) {
+export default function middleware(req: NextRequest, event: NextFetchEvent) {
   if (!hasClerk) {
     if (isAdminRoute(req)) return adminNotConfigured(req);
     return intl(req);
   }
-  return withClerk(req);
+  return withClerk(req, event);
 }
 
 export const config = {
