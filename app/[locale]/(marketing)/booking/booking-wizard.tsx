@@ -30,6 +30,7 @@ export function BookingWizard() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [days, setDays] = useState<DaySlot[]>([]);
   const [loadingSlots, startSlotLoad] = useTransition();
+  const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<{ date: string; slotKey: string } | null>(null);
   const [result, setResult] = useState<BookingResult | null>(null);
 
@@ -53,11 +54,22 @@ export function BookingWizard() {
   });
   const [submitting, startSubmit] = useTransition();
 
-  useEffect(() => {
+  const loadSlots = (offset: number) => {
     startSlotLoad(async () => {
-      const res = await getMonthSlots(monthOffset);
-      setDays(res.availableSlots);
+      try {
+        setSlotsError(null);
+        const res = await getMonthSlots(offset);
+        setDays(res.availableSlots);
+      } catch (e) {
+        setSlotsError(e instanceof Error ? e.message : "Could not load slots");
+        setDays([]);
+      }
     });
+  };
+
+  useEffect(() => {
+    loadSlots(monthOffset);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthOffset]);
 
   const monthLabel = format(addMonths(new Date(), monthOffset), "MMMM yyyy");
@@ -133,6 +145,17 @@ export function BookingWizard() {
               {loadingSlots ? (
                 <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("booking.loading")}
+                </div>
+              ) : slotsError ? (
+                <div className="flex flex-col items-center gap-3 py-16 text-center text-sm">
+                  <p className="text-muted-foreground">
+                    Couldn&apos;t load available slots right now. This is usually a brief connection blip.
+                  </p>
+                  <p className="font-mono text-xs text-muted-foreground/70">{slotsError}</p>
+                  <Button variant="outline" size="sm" onClick={() => loadSlots(monthOffset)}>
+                    <Loader2 className="h-4 w-4" />
+                    Try again
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
